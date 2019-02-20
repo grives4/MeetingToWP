@@ -1,8 +1,14 @@
+# Possible tagging
+#   Title has "Book Group":  "Book Group"
+#   Title has "Gathering":  "Gathering"
+#   Title or body has "Volunteer":  Volunteering
+#   Title has "Discussion Group": "Discussion Group"
+
 import pdb
 import json
 import time
 from wordpress_xmlrpc import Client, WordPressPost
-from wordpress_xmlrpc.methods.posts import GetPosts, NewPost, GetPost
+from wordpress_xmlrpc.methods.posts import GetPosts, NewPost, GetPost, DeletePost
 from wordpress_xmlrpc.methods.users import GetUserInfo
 import meetup.api
 from datetime import datetime
@@ -18,9 +24,8 @@ def wpGetLastUpdatedDate(eventType, eventID):
 def deleteWPEvent(eventType, eventID):
     configuration = json.loads(open('config.json').read())
     wp = Client('https://greateraustinsecularhub.org/xmlrpc2.php', configuration['wpUser'], configuration['wpKey'])
-    if eventType == 'meetup':
-        pass
-    return
+    result = wp.call(DeletePost(734))
+    return result
 
 def createWPEvent(eventType, event):
     configuration = json.loads(open('config.json').read())
