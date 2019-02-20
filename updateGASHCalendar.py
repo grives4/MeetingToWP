@@ -13,18 +13,21 @@ from wordpress_xmlrpc.methods.users import GetUserInfo
 import meetup.api
 from datetime import datetime
 
-
-def wpGetLastUpdatedDate(eventType, eventID):
-    configuration = json.loads(open('config.json').read())
-    wp = Client('https://greateraustinsecularhub.org/xmlrpc2.php', configuration['wpUser'], configuration['wpKey'])
-    if eventType == 'meetup':
-        pass
+def wpGetLastUpdatedDate(eventType, eventID,currentWPEvents):
+    for event in currentWPEvents:
+        if eventType == 'meetup':
+            meetupIDDictionary = next((item for item in event.custom_fields if item["key"] == "meetupID"),None)
+            if meetupIDDictionary is not None:
+                if meetupIDDictionary['value'] == eventID:
+                    meetupLastUpdatedDictionary = next((item for item in event.custom_fields if item["key"] == "meetupLastUpdated"),None)
+                    return meetupLastUpdatedDictionary['value']
+    
     return 0
 
-def deleteWPEvent(eventType, eventID):
+def deleteWPEvent(eventID):
     configuration = json.loads(open('config.json').read())
     wp = Client('https://greateraustinsecularhub.org/xmlrpc2.php', configuration['wpUser'], configuration['wpKey'])
-    result = wp.call(DeletePost(734))
+    result = wp.call(DeletePost(eventID))
     return result
 
 def createWPEvent(eventType, event):
@@ -81,14 +84,11 @@ def createWPEvent(eventType, event):
                             {'key':'rhc_tooltip_image', 'value':''},
                             {'key':'rhc_month_image', 'value':''},
                             {'key': 'meetupID', 'value': event['id']},
-                            {'key': 'meetupLastUpdated', 'value': event['updated']/1000}]
+                            {'key': 'meetupLastUpdated', 'value': int(event['updated']/1000)}]
         
-    #pdb.set_trace()
     post.post_status = 'publish'
     post.id = wp.call(NewPost(post))
     time.sleep(0.5)
-
-
     return
 
 #Query configuration file
@@ -96,12 +96,14 @@ configuration = json.loads(open('config.json').read())
 
 #Pull events on WordPress
 wp = Client('https://greateraustinsecularhub.org/xmlrpc2.php', configuration['wpUser'], configuration['wpKey'])
-currentWPEvents = wp.call(GetPosts({'post_type': 'events'}))
+currentWPEvents = wp.call(GetPosts({'post_type': 'events', 'number': 10000}))
 
 #Loop through meetup groups
 meetupGroupNames = configuration['meetupGroups']
 meetupClient = meetup.api.Client(configuration['meetupKey'])
+
 for meetupGroupName in meetupGroupNames:
+ 
     #Query the meet up information
     print('Searching ' + meetupGroupName)
     tempGroupInfo = meetupClient.GetGroup({'urlname': meetupGroupName})
@@ -113,15 +115,17 @@ for meetupGroupName in meetupGroupNames:
     for event in tempEvents.results:
         
         #Check to see if the meeting already exists in wp
-        lastUpdated = wpGetLastUpdatedDate('meetup', event['id'])
-
+        lastUpdated = wpGetLastUpdatedDate('meetup', event['id'],currentWPEvents)
+        if lastUpdated == 0:
+            print(event['id'])
+ 
         #If the meeting needs to be updated, delete it.
-        if lastUpdated < event['updated'] and lastUpdated != 0:
-            deleteWPEvent('meetup', event['id'])
+        if int(lastUpdated) < int(event['updated']/1000) and lastUpdated != 0:
+            deleteWPEvent(event['id'])
             lastUpdated = 0
+            print('Meetup deleted due to last update too old.')
 
         #If the meeting doesn't exist create it.    
         if lastUpdated == 0:
             createWPEvent('meetup', event)
-
-        #pdb.set_trace()        
+      
