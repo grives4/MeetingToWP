@@ -1,5 +1,6 @@
 import pdb
 import json
+import time
 from wordpress_xmlrpc import Client, WordPressPost
 from wordpress_xmlrpc.methods.posts import GetPosts, NewPost, GetPost
 from wordpress_xmlrpc.methods.users import GetUserInfo
@@ -49,8 +50,7 @@ def createWPEvent(eventType, event):
         eventStartDateTime = eventStartDateTime_Datetime.strftime("%Y-%m-%d")
         eventEndDateTime = eventEndDateTime_Datetime.strftime("%Y-%m-%d")
         eventTags = ''
-        post.exerpt = configuration['wpInfoBox'] % (eventStartTime, eventEndTime, eventLocation, event['group']['name'], eventTags, event['event_url'], event['event_url'], event['description'][:100])
-        
+        post.excerpt = configuration['wpInfoBox'] % (eventStartTime, eventEndTime, eventLocation, event['group']['name'], eventTags, event['event_url'], event['event_url'], event['description'][:200])
         post.custom_fields = [{'key': 'fc_allday','value': 0},
                             {'key': 'fc_start','value':eventStartDateTime},
                             {'key': 'fc_start_time','value': eventStartTime},
@@ -78,9 +78,11 @@ def createWPEvent(eventType, event):
                             {'key': 'meetupID', 'value': event['id']},
                             {'key': 'meetupLastUpdated', 'value': event['updated']/1000}]
         
-    pdb.set_trace()
+    #pdb.set_trace()
     post.post_status = 'publish'
     post.id = wp.call(NewPost(post))
+    time.sleep(0.5)
+
 
     return
 
@@ -117,4 +119,4 @@ for meetupGroupName in meetupGroupNames:
         if lastUpdated == 0:
             createWPEvent('meetup', event)
 
-        pdb.set_trace()        
+        #pdb.set_trace()        
