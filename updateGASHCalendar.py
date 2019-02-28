@@ -12,6 +12,7 @@ from wordpress_xmlrpc.methods.posts import GetPosts, NewPost, GetPost, DeletePos
 from wordpress_xmlrpc.methods.users import GetUserInfo
 import meetup.api
 from datetime import datetime
+from pprint import pprint
 
 def wpGetLastUpdatedDate(eventType, eventID,currentWPEvents):
     for event in currentWPEvents:
@@ -20,14 +21,14 @@ def wpGetLastUpdatedDate(eventType, eventID,currentWPEvents):
             if meetupIDDictionary is not None:
                 if meetupIDDictionary['value'] == eventID:
                     meetupLastUpdatedDictionary = next((item for item in event.custom_fields if item["key"] == "meetupLastUpdated"),None)
-                    return meetupLastUpdatedDictionary['value']
+                    return [meetupLastUpdatedDictionary['value'], event.id]
     
-    return 0
+    return [0,0]
 
-def deleteWPEvent(eventID):
+def deleteWPEvent(wpID):
     configuration = json.loads(open('config.json').read())
     wp = Client('https://greateraustinsecularhub.org/xmlrpc2.php', configuration['wpUser'], configuration['wpKey'])
-    result = wp.call(DeletePost(eventID))
+    result = wp.call(DeletePost(wpID))
     return result
 
 def createWPEvent(eventType, event):
@@ -87,6 +88,7 @@ def createWPEvent(eventType, event):
                             {'key': 'meetupLastUpdated', 'value': int(event['updated']/1000)}]
         
     post.post_status = 'publish'
+    #pprint(post)
     post.id = wp.call(NewPost(post))
     time.sleep(0.5)
     return
@@ -115,17 +117,20 @@ for meetupGroupName in meetupGroupNames:
     for event in tempEvents.results:
         
         #Check to see if the meeting already exists in wp
-        lastUpdated = wpGetLastUpdatedDate('meetup', event['id'],currentWPEvents)
-        if lastUpdated == 0:
-            print(event['id'])
+        [lastUpdated, wpID] = wpGetLastUpdatedDate('meetup', event['id'],currentWPEvents)
  
         #If the meeting needs to be updated, delete it.
         if int(lastUpdated) < int(event['updated']/1000) and lastUpdated != 0:
-            deleteWPEvent(event['id'])
+            print("delete event" + str(wpID))
+            pdb.set_trace()
+            deleteWPEvent(str(wpID))
             lastUpdated = 0
             print('Meetup deleted due to last update too old.')
 
         #If the meeting doesn't exist create it.    
         if lastUpdated == 0:
+            print("Creating Event")
+            #pprint(event)
+            #print("WP")
             createWPEvent('meetup', event)
       
