@@ -19,6 +19,31 @@ import meetup.api
 from datetime import datetime
 from pprint import pprint
 
+def getTags(title, body):
+    textToSearch = (title + ' ' + body).lower()
+    criteria = {'Book/Dicussion Group': ['book'],
+                'Community': ['gathering', 'tramps', 'trivia', 'potluck', 'brunch', 'dinner', 'lunch', 'game', 'role-play'],
+                'Volunteering': ['volunteer'],
+                'Broadcast/Podcast': ['broadcast','podcast', 'taping'],
+                'Trivia Night': ['tramps','trivia'],
+                'Potluck': ['potluck'],
+                'Brunch/Lunch/Dinner': ['brunch','dinner','lunch'],
+                'Lecture': ['lecture', 'philosophy', 'gathering'],
+                'Games': ['game','role-play']}
+    
+    tags = []
+    for key, values in criteria.items():
+        for value in values:
+            if value in textToSearch:
+                tags.append(key)
+                continue
+
+    if not tags:
+        tags = ['Community']  
+
+    return tags
+
+
 def wpGetLastUpdatedDate(eventType, eventID,currentWPEvents):
     for event in currentWPEvents:
         if eventType == 'meetup':
@@ -50,9 +75,10 @@ def createWPEvent(eventType, event):
         if event['visibility'] == 'public':
             eventLocation = event['venue']['name']
         
+        eventTags = getTags(event['name'], event['description'])
         post.terms_names = {
-            'post_tag': [],
-            'venue': [eventLocation],
+            'post_tag': eventTags,
+            #'venue': [eventLocation],
             'organizer': [event['group']['name']]
         }
         
@@ -65,8 +91,7 @@ def createWPEvent(eventType, event):
         eventEndTime_Pretty = eventEndDateTime_Datetime.strftime("%-I:%M %P")
         eventStartDateTime = eventStartDateTime_Datetime.strftime("%Y-%m-%d")
         eventEndDateTime = eventEndDateTime_Datetime.strftime("%Y-%m-%d")
-        eventTags = ''
-        post.excerpt = configuration['wpInfoBox'] % (event['group']['name'], eventStartTime_Pretty, eventEndTime_Pretty, eventLocation, eventTags, event['event_url'], event['event_url'], event['description'][:200])
+        post.excerpt = configuration['wpInfoBox'] % (event['group']['name'], eventStartTime_Pretty, eventEndTime_Pretty, eventLocation, ', '.join(eventTags), event['event_url'], event['event_url'], event['description'][:200])
         post.custom_fields = [{'key': 'fc_allday','value': 0},
                             {'key': 'fc_start','value':eventStartDateTime},
                             {'key': 'fc_start_time','value': eventStartTime},
