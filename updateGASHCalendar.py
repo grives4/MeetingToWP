@@ -1,8 +1,13 @@
 # Possible tagging
 #   Title has "Book Group":  "Book Group"
 #   Title has "Gathering":  "Gathering"
-#   Title or body has "Volunteer":  Volunteering
+#   Title or body has "Volunteer":  "Volunteering"
 #   Title has "Discussion Group": "Discussion Group"
+#   Title has "Role": "Games"
+#   Title or body has "Dinner" or "Brunch" or "Potluck":  "Community"
+#   Title or body has "Tramps" or "Trivia": Trivia night
+#   Title or body has "Broadcast" or "Taping": Broadcast
+
 
 import pdb
 import json
@@ -56,10 +61,12 @@ def createWPEvent(eventType, event):
 
         eventStartTime = eventStartDateTime_Datetime.strftime("%H:%M")
         eventEndTime = eventEndDateTime_Datetime.strftime("%H:%M")
+        eventStartTime_Pretty = eventStartDateTime_Datetime.strftime("%-I:%M %P")
+        eventEndTime_Pretty = eventEndDateTime_Datetime.strftime("%-I:%M %P")
         eventStartDateTime = eventStartDateTime_Datetime.strftime("%Y-%m-%d")
         eventEndDateTime = eventEndDateTime_Datetime.strftime("%Y-%m-%d")
         eventTags = ''
-        post.excerpt = configuration['wpInfoBox'] % (eventStartTime, eventEndTime, eventLocation, event['group']['name'], eventTags, event['event_url'], event['event_url'], event['description'][:200])
+        post.excerpt = configuration['wpInfoBox'] % (event['group']['name'], eventStartTime_Pretty, eventEndTime_Pretty, eventLocation, eventTags, event['event_url'], event['event_url'], event['description'][:200])
         post.custom_fields = [{'key': 'fc_allday','value': 0},
                             {'key': 'fc_start','value':eventStartDateTime},
                             {'key': 'fc_start_time','value': eventStartTime},
