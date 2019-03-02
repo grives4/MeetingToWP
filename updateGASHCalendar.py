@@ -122,7 +122,7 @@ for meetupGroupName in meetupGroupNames:
         #If the meeting needs to be updated, delete it.
         if int(lastUpdated) < int(event['updated']/1000) and lastUpdated != 0:
             print("delete event" + str(wpID))
-            pdb.set_trace()
+            #pdb.set_trace()
             deleteWPEvent(str(wpID))
             lastUpdated = 0
             print('Meetup deleted due to last update too old.')
