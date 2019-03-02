@@ -51,8 +51,8 @@ def createWPEvent(eventType, event):
             'organizer': [event['group']['name']]
         }
         
-        eventStartDateTime_Datetime = datetime.fromtimestamp(event['time']/1000)  
-        eventEndDateTime_Datetime = datetime.fromtimestamp((event['time']+event['duration'])/1000) 
+        eventStartDateTime_Datetime = datetime.fromtimestamp((event['time']+event['utc_offset'])/1000)  
+        eventEndDateTime_Datetime = datetime.fromtimestamp((event['time']+event['utc_offset']+event['duration'])/1000) 
 
         eventStartTime = eventStartDateTime_Datetime.strftime("%H:%M")
         eventEndTime = eventEndDateTime_Datetime.strftime("%H:%M")
@@ -86,7 +86,7 @@ def createWPEvent(eventType, event):
                             {'key':'rhc_month_image', 'value':''},
                             {'key': 'meetupID', 'value': event['id']},
                             {'key': 'meetupLastUpdated', 'value': int(event['updated']/1000)}]
-        
+    #pdb.set_trace()
     post.post_status = 'publish'
     #pprint(post)
     post.id = wp.call(NewPost(post))
