@@ -131,6 +131,8 @@ configuration = json.loads(open('config.json').read())
 #Pull events on WordPress
 wp = Client('https://greateraustinsecularhub.org/xmlrpc2.php', configuration['wpUser'], configuration['wpKey'])
 currentWPEvents = wp.call(GetPosts({'post_type': 'events', 'number': 10000}))
+#for event in currentWPEvents:
+#    pprint(event.__dict__)
 
 #Loop through meetup groups
 meetupGroupNames = configuration['meetupGroups']
