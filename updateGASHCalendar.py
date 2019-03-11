@@ -132,6 +132,7 @@ configuration = json.loads(open('config.json').read())
 wp = Client('https://greateraustinsecularhub.org/xmlrpc2.php', configuration['wpUser'], configuration['wpKey'])
 currentWPEvents = wp.call(GetPosts({'post_type': 'events', 'number': 10000}))
 #for event in currentWPEvents:
+     #pprint(event.id)
 #    pprint(event.__dict__)
 
 #Loop through meetup groups
@@ -149,7 +150,9 @@ for meetupGroupName in meetupGroupNames:
     
     #Iterate through the meetings
     for event in tempEvents.results:
-        
+        #pdb.set_trace()
+        #pprint(event['id'])
+        #quit()
         #Check to see if the meeting already exists in wp
         [lastUpdated, wpID] = wpGetLastUpdatedDate('meetup', event['id'],currentWPEvents)
  
@@ -157,7 +160,7 @@ for meetupGroupName in meetupGroupNames:
         if int(lastUpdated) < int(event['updated']/1000) and lastUpdated != 0:
             print("delete event" + str(wpID))
             #pdb.set_trace()
-            deleteWPEvent(str(wpID))
+            deleteWPEvent(wpID)
             lastUpdated = 0
             print('Meetup deleted due to last update too old.')
 
