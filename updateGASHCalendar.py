@@ -128,17 +128,22 @@ def createWPEvent(eventType, event):
 #Query configuration file
 configuration = json.loads(open('config.json').read())
 
-#Pull events on WordPress
-wp = Client('https://greateraustinsecularhub.org/xmlrpc2.php', configuration['wpUser'], configuration['wpKey'])
-currentWPEvents = wp.call(GetPosts({'post_type': 'events', 'number': 10000}))
-#for event in currentWPEvents:
-     #pprint(event.id)
-#    pprint(event.__dict__)
-
-#Loop through meetup groups
+#Pull events on WordPress and delete the ones that don't exist
 meetupGroupNames = configuration['meetupGroups']
 meetupClient = meetup.api.Client(configuration['meetupKey'])
+wp = Client('https://greateraustinsecularhub.org/xmlrpc2.php', configuration['wpUser'], configuration['wpKey'])
+currentWPEvents = wp.call(GetPosts({'post_type': 'events', 'number': 10000}))
+for event in currentWPEvents:
+    meetupIDDictionary = next((item for item in event.custom_fields if item["key"] == "meetupID"), None)
+    if meetupIDDictionary is not None:
+        try:
+           tempEvent = meetupClient.GetEvent({'id': meetupIDDictionary['value']})
+        except:
+           #print("Delete " + meetupIDDictionary['value'])
+           deleteWPEvent(event.id)
+           #print("Deleted")
 
+#Loop through meetup groups
 for meetupGroupName in meetupGroupNames:
  
     #Query the meet up information
@@ -169,5 +174,6 @@ for meetupGroupName in meetupGroupNames:
             print("Creating Event")
             #pprint(event)
             #print("WP")
+            #pdb.set_trace()
             createWPEvent('meetup', event)
       
